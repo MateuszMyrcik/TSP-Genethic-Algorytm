@@ -1,5 +1,45 @@
 fs = require("fs");
 
+// utils
+
+const shuffle = (array) => {
+  let currentIndex = array.length;
+  let randomIndex;
+
+  while (currentIndex != 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex],
+    ];
+  }
+
+  return array;
+};
+
+const crossOverDNA = (p1, p2, sub) => {
+  var j = 0;
+
+  const result = p1.map((i) => {
+    if (sub.includes(i)) {
+      return i;
+    }
+    while (sub.includes(p2[j])) ++j;
+    return p2[j++];
+  });
+
+  return result;
+};
+
+const swap = (a, i, j) => {
+  var temp = a[i];
+  a[i] = a[j];
+  a[j] = temp;
+};
+
+// GA
 const getCities = async () => {
   const data = await fs.readFileSync(
     "./dane/pr144.tsp",
@@ -23,15 +63,93 @@ const convertTSPToArray = (tspText) => {
     .trim()
     .split("\n")
     .map((cordString) => cordString.trim().split(" "))
-    .map((cordsArr) => cordsArr.filter((cord) => cord !== ""));
+    .map((cordArr) => cordArr.filter((cordCandidate) => cordCandidate !== ""))
+    .map((cordArr) => {
+      return {
+        index: cordArr[0] - 1,
+        x: Number(cordArr[1]),
+        y: Number(cordArr[2]),
+      };
+    });
+};
+
+const initPopulation = (cities, populationAmount) => {
+  const population = [];
+
+  for (let i = 0; i < populationAmount; i++) {
+    population.push(cities);
+  }
+
+  return population;
+};
+
+const crossOver = (population, populationAmount) => {
+  const crossOverPopulation = [];
+  const crossedAmountOfGens = 5;
+
+  const shuffledPopulation = shuffle([...population]);
+
+  const DNALength = population[0].length - 1; // counting from 0 index
+
+  const crossingStart =
+    Math.floor(Math.random() * 10 + crossedAmountOfGens) - crossedAmountOfGens;
+
+  const before = shuffledPopulation.map((DNA) =>
+    DNA.map((item) => item.index).join(" ")
+  );
+  console.log(crossingStart, "crossingStart");
+  console.log("before", before[0]);
+
+  for (let i = 0; i < populationAmount; i += 2) {
+    let DNAFirst = shuffledPopulation[i];
+    let DNASecond = shuffledPopulation[i + 1];
+
+    const crossedGenesFirst = [...DNAFirst].splice(
+      crossingStart,
+      crossedAmountOfGens
+    );
+
+    const crossedGenesSecond = [...DNASecond].splice(
+      crossingStart,
+      crossedAmountOfGens
+    );
+
+    crossOverPopulation.push(
+      crossOverDNA(DNASecond, DNAFirst, crossedGenesSecond)
+    );
+
+    crossOverPopulation.push(
+      crossOverDNA(DNAFirst, DNASecond, crossedGenesFirst)
+    );
+  }
+
+  const after = crossOverPopulation.map((DNA) =>
+    DNA.map((item) => item.index).join(" ")
+  );
+  console.log("after", after[0]);
 };
 
 const init = async () => {
+  let executionNumb = 1; //	liczba	uruchomień	programu
+  let populationAmount = 4; // liczba	populacji
+  let crossProbability = 0.8; // prawdopodobieństwo	krzyżowania
+  let mutationProbability = 0.1; // prawdopodobieństwo	mutacji
+
+  let population = [];
+
   const cities = await getCities().then((data) => {
     return convertTSPToArray(data);
   });
 
-  console.log(cities);
+  population = initPopulation(cities, populationAmount);
+
+  population = population.map((DNA) => {
+    return shuffle([...DNA]);
+  });
+
+  for (let i = 0; i < executionNumb; i++) {
+    population = crossOver(population, populationAmount);
+  }
 };
 
 init();
