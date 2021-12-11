@@ -2,6 +2,33 @@ fs = require("fs");
 
 // utils
 
+const insert = (arr, index, ...newItems) => [
+  // part of the array before the specified index
+  ...arr.slice(0, index),
+  // inserted items
+  ...newItems,
+  // part of the array after the specified index
+  ...arr.slice(index),
+];
+
+const crossOverDNA = (p1, p2, sub, crossIndex) => {
+  let candidateDNA = [
+    ...p2.splice(crossIndex, p2.length),
+    ...p2.splice(0, crossIndex),
+  ];
+
+  candidateDNA = candidateDNA.filter((item) => {
+    if (sub.includes(item)) {
+      return;
+    }
+
+    return item;
+  });
+
+  candidateDNA = insert(candidateDNA, crossIndex, ...sub);
+  return candidateDNA;
+};
+
 const shuffle = (array) => {
   let currentIndex = array.length;
   let randomIndex;
@@ -17,20 +44,6 @@ const shuffle = (array) => {
   }
 
   return array;
-};
-
-const crossOverDNA = (p1, p2, sub) => {
-  var j = 0;
-
-  const result = p1.map((i) => {
-    if (sub.includes(i)) {
-      return i;
-    }
-    while (sub.includes(p2[j])) ++j;
-    return p2[j++];
-  });
-
-  return result;
 };
 
 const swap = (a, i, j) => {
@@ -97,8 +110,8 @@ const crossOver = (population, populationAmount) => {
   const before = shuffledPopulation.map((DNA) =>
     DNA.map((item) => item.index).join(" ")
   );
-  console.log(crossingStart, "crossingStart");
-  console.log("before", before[0]);
+  // console.log(crossingStart, "crossingStart");
+  // console.log("before", before[0]);
 
   for (let i = 0; i < populationAmount; i += 2) {
     let DNAFirst = shuffledPopulation[i];
@@ -115,18 +128,18 @@ const crossOver = (population, populationAmount) => {
     );
 
     crossOverPopulation.push(
-      crossOverDNA(DNASecond, DNAFirst, crossedGenesSecond)
+      crossOverDNA(DNASecond, DNAFirst, crossedGenesSecond, crossingStart)
     );
 
     crossOverPopulation.push(
-      crossOverDNA(DNAFirst, DNASecond, crossedGenesFirst)
+      crossOverDNA(DNAFirst, DNASecond, crossedGenesFirst, crossingStart)
     );
   }
 
   const after = crossOverPopulation.map((DNA) =>
     DNA.map((item) => item.index).join(" ")
   );
-  console.log("after", after[0]);
+  // console.log("after", after[0]);
 };
 
 const init = async () => {
