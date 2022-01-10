@@ -2,7 +2,24 @@ fs = require("fs");
 
 // utils
 
-const insert = (arr, index, ...newItems) => [
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const arrayReverse = (arr, index, length) => {
+  let temp = arr.slice(index, index + length);
+  temp.reverse();
+
+  for (let i = 0, j = index; i < temp.length, j < index + length; i++, j++) {
+    arr[j] = temp[i];
+  }
+
+  return arr;
+};
+
+const insertIntoArray = (arr, index, ...newItems) => [
   // part of the array before the specified index
   ...arr.slice(0, index),
   // inserted items
@@ -25,7 +42,7 @@ const crossOverDNA = (p1, p2, sub, crossIndex) => {
     return item;
   });
 
-  candidateDNA = insert(candidateDNA, crossIndex, ...sub);
+  candidateDNA = insertIntoArray(candidateDNA, crossIndex, ...sub);
   return candidateDNA;
 };
 
@@ -96,10 +113,14 @@ const initPopulation = (cities, populationAmount) => {
   return population;
 };
 
-const crossOver = (population, populationAmount) => {
+const crossOver = (population, populationAmount, crossProbability) => {
+  // TODO: it should be placed during crossing process
+  if (Math.random() > crossProbability) {
+    return population;
+  }
+
   const crossOverPopulation = [];
   const crossedAmountOfGens = 5;
-
   const shuffledPopulation = shuffle([...population]);
 
   const DNALength = population[0].length - 1; // counting from 0 index
@@ -107,9 +128,9 @@ const crossOver = (population, populationAmount) => {
   const crossingStart =
     Math.floor(Math.random() * 10 + crossedAmountOfGens) - crossedAmountOfGens;
 
-  const before = shuffledPopulation.map((DNA) =>
-    DNA.map((item) => item.index).join(" ")
-  );
+  // const before = shuffledPopulation.map((DNA) =>
+  //   DNA.map((item) => item.index).join(" ")
+  // );
   // console.log(crossingStart, "crossingStart");
   // console.log("before", before[0]);
 
@@ -136,14 +157,39 @@ const crossOver = (population, populationAmount) => {
     );
   }
 
-  const after = crossOverPopulation.map((DNA) =>
-    DNA.map((item) => item.index).join(" ")
-  );
+  // const after = crossOverPopulation.map((DNA) =>
+  //   DNA.map((item) => item.index).join(" ")
+  // );
   // console.log("after", after[0]);
+
+  return crossOverPopulation;
+};
+
+const mutateDNA = (DNA) => {
+  const numberOfGenes = 5;
+  const randomIndex = getRandomInt(0, DNA.length - numberOfGenes);
+
+  const mutatedDNA = arrayReverse([...DNA], randomIndex, numberOfGenes);
+
+  return mutatedDNA;
+};
+
+const mutation = (population, mutationProbability) => {
+  const mutatedPopulation = [];
+
+  for (let i = 0; i < population.length; i++) {
+    if (Math.random() > mutationProbability) {
+      mutatedPopulation.push(population[i]);
+    } else {
+      mutatedPopulation.push(mutateDNA(population[i]));
+    }
+  }
+
+  return mutatedPopulation;
 };
 
 const init = async () => {
-  let executionNumb = 1; //	liczba	uruchomień	programu
+  let executionNumb = 4; //	liczba	uruchomień	programu
   let populationAmount = 4; // liczba	populacji
   let crossProbability = 0.8; // prawdopodobieństwo	krzyżowania
   let mutationProbability = 0.1; // prawdopodobieństwo	mutacji
@@ -161,7 +207,8 @@ const init = async () => {
   });
 
   for (let i = 0; i < executionNumb; i++) {
-    population = crossOver(population, populationAmount);
+    population = crossOver(population, populationAmount, crossProbability);
+    population = mutatiadd on(population, mutationProbability);
   }
 };
 
