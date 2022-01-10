@@ -208,7 +208,7 @@ const init = async () => {
 
   for (let i = 0; i < executionNumb; i++) {
     population = crossOver(population, populationAmount, crossProbability);
-    population = mutatiadd on(population, mutationProbability);
+    population = mutation(population, mutationProbability);
   }
 };
 
