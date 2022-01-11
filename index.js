@@ -19,6 +19,18 @@ const arrayReverse = (arr, index, length) => {
   return arr;
 };
 
+const getDistance = (a, b) => {
+  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+};
+
+// Sp - wspolczynnik selekcji  Sp => [1.0 ;2.0]
+// N - liczba wybieranych osobnikow
+// rank - pozycja na liscie rankingowej
+const linearRankingValue = (rank, N) => {
+  const Sp = 2;
+  return 2 - Sp + (2 * (Sp - 1) * (rank - 1)) / (N - 1);
+};
+
 const insertIntoArray = (arr, index, ...newItems) => [
   // part of the array before the specified index
   ...arr.slice(0, index),
@@ -188,6 +200,54 @@ const mutation = (population, mutationProbability) => {
   return mutatedPopulation;
 };
 
+const selection = (population) => {
+  const distances = [];
+
+  [...population].forEach((DNA, index) => {
+    let distance = 0;
+
+    DNA.forEach((gen, index) => {
+      if (DNA.length - 1 === index) {
+        return;
+      }
+
+      distance += getDistance(gen, DNA[index + 1]);
+    });
+
+    distances.push({ distance, index: index });
+  });
+
+  distances
+    .sort((a, b) => {
+      return a.distance - b.distance;
+    })
+    .reverse()
+    .map((DNA, index) => {
+      DNA.probability =
+        linearRankingValue(index + 1, population.length) / population.length;
+
+      return DNA;
+    })
+    .reverse();
+
+  return population.map((DNA) => {
+    const randomInt = Math.random();
+    let accumulator = 0;
+    let newDNaIndex;
+
+    distances.some((distance, index) => {
+      accumulator += distance.probability;
+
+      if (randomInt < accumulator) {
+        newDNaIndex = distance.index;
+        return true;
+      }
+    });
+
+    return population[newDNaIndex];
+  });
+};
+
 const init = async () => {
   let executionNumb = 4; //	liczba	uruchomień	programu
   let populationAmount = 4; // liczba	populacji
@@ -209,6 +269,7 @@ const init = async () => {
   for (let i = 0; i < executionNumb; i++) {
     population = crossOver(population, populationAmount, crossProbability);
     population = mutation(population, mutationProbability);
+    population = selection(population);
   }
 };
 
