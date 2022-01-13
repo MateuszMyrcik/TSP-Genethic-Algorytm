@@ -161,11 +161,21 @@ const crossOver = (population, populationAmount, crossProbability) => {
     );
 
     crossOverPopulation.push(
-      crossOverDNA(DNASecond, DNAFirst, crossedGenesSecond, crossingStart)
+      crossOverDNA(
+        [...DNASecond],
+        [...DNAFirst],
+        crossedGenesSecond,
+        crossingStart
+      )
     );
 
     crossOverPopulation.push(
-      crossOverDNA(DNAFirst, DNASecond, crossedGenesFirst, crossingStart)
+      crossOverDNA(
+        [...DNAFirst],
+        [...DNASecond],
+        crossedGenesFirst,
+        crossingStart
+      )
     );
   }
 
@@ -230,6 +240,11 @@ const selection = (population) => {
     })
     .reverse();
 
+  console.log(
+    "best from population:",
+    distances[population.length - 1].distance
+  );
+
   return population.map((DNA) => {
     const randomInt = Math.random();
     let accumulator = 0;
@@ -249,8 +264,8 @@ const selection = (population) => {
 };
 
 const init = async () => {
-  let executionNumb = 4; //	liczba	uruchomień	programu
-  let populationAmount = 4; // liczba	populacji
+  let executionNumb = 10; //	liczba	uruchomień	programu
+  let populationAmount = 100; // liczba	populacji
   let crossProbability = 0.8; // prawdopodobieństwo	krzyżowania
   let mutationProbability = 0.1; // prawdopodobieństwo	mutacji
 
