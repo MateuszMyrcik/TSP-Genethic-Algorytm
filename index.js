@@ -139,7 +139,7 @@ const initPopulation = (cities, populationAmount) => {
   return population;
 };
 
-const crossOver = (population, populationAmount, crossProbability) => {
+const crossOver1 = (population, populationAmount, crossProbability) => {
   // TODO: it should be placed during crossing process
   if (Math.random() > crossProbability) {
     return population;
@@ -201,6 +201,54 @@ const crossOver = (population, populationAmount, crossProbability) => {
   return crossOverPopulation;
 };
 
+const crossOver = (population, populationAmount, crossProbability) => {
+  // TODO: it should be placed during crossing process
+  if (Math.random() > crossProbability) {
+    return population;
+  }
+
+  const crossOverPopulation = [];
+  const shuffledPopulation = shuffle([...population]);
+
+  // const before = shuffledPopulation.map((DNA) =>
+  //   DNA.map((item) => item.index).join(" ")
+  // );
+  // console.log(crossingStart, "crossingStart");
+  // console.log("before", before[0]);
+
+  for (let i = 0; i < populationAmount; i += 2) {
+    let DNAFirstParent = shuffledPopulation[i];
+    let DNASecondParent = shuffledPopulation[i + 1];
+
+    crossOverPopulation.push(crossOverFun(DNAFirstParent, DNASecondParent));
+    crossOverPopulation.push(crossOverFun(DNASecondParent, DNAFirstParent));
+  }
+
+  return crossOverPopulation;
+};
+
+const crossOverFun = (orderA, orderB) => {
+  const randomNumbers = [
+    Math.floor(Math.random() * 144),
+    Math.floor(Math.random() * 144),
+  ];
+
+  const start = Math.min(...randomNumbers);
+  const end = Math.max(...randomNumbers);
+
+  const newOrder = orderA.slice(start, end);
+
+  for (let i = 0; i < orderB.length; i++) {
+    const city = orderB[i];
+
+    if (!newOrder.includes(city)) {
+      newOrder.push(city);
+    }
+  }
+
+  return newOrder;
+};
+
 const mutateDNA = (DNA) => {
   const numberOfGenes = 5;
   const randomIndex = getRandomInt(0, DNA.length - numberOfGenes);
@@ -254,41 +302,46 @@ const selection = (population) => {
     })
     .reverse();
 
-  if (getWholeDistance(bestDNA) > distances[population.length - 1].distance) {
-    bestDNA = population[distances[population.length - 1].index];
-    population[distances[population.length - 1].index] = bestDNA;
-  }
-
   //   console.log(
   //   "best from population:",
   //   distances[population.length - 1].distance
   // );
 
-  return population.map((DNA, index) => {
-    const randomInt = Math.random();
-    let accumulator = 0;
-    let newDNaIndex;
+  return population
+    .sort((a, b) => getWholeDistance(a) - getWholeDistance(b))
+    .map((DNA, index) => {
+      const randomInt = Math.random();
+      let accumulator = 0;
+      let newDNaIndex;
 
-    if (index === population.length - 1) {
-      return DNA;
-    }
+      if (index === 0 && getWholeDistance(bestDNA) < getWholeDistance(DNA)) {
+        return bestDNA;
+      } else if (index === 0) {
+        bestDNA = DNA;
 
-    distances.some((distance, index) => {
-      accumulator += distance.probability;
-
-      if (randomInt < accumulator) {
-        newDNaIndex = distance.index;
-        return true;
+        return DNA;
       }
-    });
 
-    return population[newDNaIndex];
-  });
+      if (index < population.length * 0.1) {
+        return DNA;
+      }
+
+      distances.some((distance, index) => {
+        accumulator += distance.probability;
+
+        if (randomInt < accumulator) {
+          newDNaIndex = distance.index;
+          return true;
+        }
+      });
+
+      return population[newDNaIndex];
+    });
 };
 
 const init = async () => {
   let executionNumb = 1000000; //	liczba	uruchomień	programu
-  let populationAmount = 1000; // liczba	populacji
+  let populationAmount = 100; // liczba	populacji
   let crossProbability = 0.8; // prawdopodobieństwo	krzyżowania
   let mutationProbability = 0.1; // prawdopodobieństwo	mutacji
 
@@ -310,8 +363,8 @@ const init = async () => {
     population = crossOver(population, populationAmount, crossProbability);
     population = mutation(population, mutationProbability);
     population = selection(population);
+
     console.log("best from DNA:", getWholeDistance(bestDNA));
-    // debugger;
   }
 };
 
