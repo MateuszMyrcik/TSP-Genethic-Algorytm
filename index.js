@@ -1,4 +1,5 @@
 fs = require("fs");
+let bestDNA = [];
 
 // utils
 
@@ -21,6 +22,19 @@ const arrayReverse = (arr, index, length) => {
 
 const getDistance = (a, b) => {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+};
+
+const getWholeDistance = (DNA) => {
+  let distance = 0;
+  DNA.forEach((gen, index) => {
+    if (DNA.length - 1 === index) {
+      return;
+    }
+
+    distance += getDistance(gen, DNA[index + 1]);
+  });
+
+  return distance;
 };
 
 // Sp - wspolczynnik selekcji  Sp => [1.0 ;2.0]
@@ -240,15 +254,24 @@ const selection = (population) => {
     })
     .reverse();
 
-  console.log(
-    "best from population:",
-    distances[population.length - 1].distance
-  );
+  if (getWholeDistance(bestDNA) > distances[population.length - 1].distance) {
+    bestDNA = population[distances[population.length - 1].index];
+    population[distances[population.length - 1].index] = bestDNA;
+  }
 
-  return population.map((DNA) => {
+  //   console.log(
+  //   "best from population:",
+  //   distances[population.length - 1].distance
+  // );
+
+  return population.map((DNA, index) => {
     const randomInt = Math.random();
     let accumulator = 0;
     let newDNaIndex;
+
+    if (index === population.length - 1) {
+      return DNA;
+    }
 
     distances.some((distance, index) => {
       accumulator += distance.probability;
@@ -264,8 +287,8 @@ const selection = (population) => {
 };
 
 const init = async () => {
-  let executionNumb = 10; //	liczba	uruchomień	programu
-  let populationAmount = 100; // liczba	populacji
+  let executionNumb = 1000000; //	liczba	uruchomień	programu
+  let populationAmount = 1000; // liczba	populacji
   let crossProbability = 0.8; // prawdopodobieństwo	krzyżowania
   let mutationProbability = 0.1; // prawdopodobieństwo	mutacji
 
@@ -281,10 +304,14 @@ const init = async () => {
     return shuffle([...DNA]);
   });
 
+  bestDNA = population[0];
+
   for (let i = 0; i < executionNumb; i++) {
     population = crossOver(population, populationAmount, crossProbability);
     population = mutation(population, mutationProbability);
     population = selection(population);
+    console.log("best from DNA:", getWholeDistance(bestDNA));
+    // debugger;
   }
 };
 
