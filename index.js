@@ -322,7 +322,7 @@ const selection = (population) => {
         return DNA;
       }
 
-      if (index < population.length * 0.1) {
+      if (index < population.length * 0.2) {
         return DNA;
       }
 
@@ -340,10 +340,13 @@ const selection = (population) => {
 };
 
 const init = async () => {
-  let executionNumb = 1000000; //	liczba	uruchomień	programu
-  let populationAmount = 100; // liczba	populacji
+  let scriptStart = Date.now();
+  let execution = true;
+
+  // let executionNumb = 1000000; //	liczba	uruchomień	programu
+  let populationAmount = 50; // liczba	populacji
   let crossProbability = 0.8; // prawdopodobieństwo	krzyżowania
-  let mutationProbability = 0.1; // prawdopodobieństwo	mutacji
+  let mutationProbability = 0.15; // prawdopodobieństwo	mutacji
 
   let population = [];
 
@@ -359,13 +362,24 @@ const init = async () => {
 
   bestDNA = population[0];
 
-  for (let i = 0; i < executionNumb; i++) {
-    population = crossOver(population, populationAmount, crossProbability);
+  while (execution) {
     population = mutation(population, mutationProbability);
+    population = crossOver(population, populationAmount, crossProbability);
     population = selection(population);
 
-    console.log("best from DNA:", getWholeDistance(bestDNA));
+    console.log("best from DNA:", getWholeDistance(population[0]));
+    if (Date.now() - scriptStart > 240000) {
+      execution = false;
+    }
   }
+
+  // for (let i = 0; i < executionNumb; i++) {
+  //   population = crossOver(population, populationAmount, crossProbability);
+  //   population = mutation(population, mutationProbability);
+  //   population = selection(population);
+
+  //   console.log("best from DNA:", getWholeDistance(bestDNA));
+  // }
 };
 
 init();
