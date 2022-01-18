@@ -96,18 +96,14 @@ const swap = (a, i, j) => {
 };
 
 // GA
-const getCities = async () => {
-  const data = await fs.readFileSync(
-    "./dane/pr144.tsp",
-    "utf8",
-    function (err, data) {
-      if (err) {
-        return console.log(err);
-      }
-
-      return convertTSPToArray(data);
+const getCities = async (filePath) => {
+  const data = await fs.readFileSync(filePath, "utf8", function (err, data) {
+    if (err) {
+      return console.log(err);
     }
-  );
+
+    return convertTSPToArray(data);
+  });
 
   return data;
 };
@@ -340,46 +336,60 @@ const selection = (population) => {
 };
 
 const init = async () => {
-  let scriptStart = Date.now();
   let execution = true;
 
-  // let executionNumb = 1000000; //	liczba	uruchomień	programu
+  let executionNumb = 3; //	liczba	uruchomień	programu
+  let oneExecutionTime = 600000; // in ms
   let populationAmount = 50; // liczba	populacji
   let crossProbability = 0.8; // prawdopodobieństwo	krzyżowania
   let mutationProbability = 0.15; // prawdopodobieństwo	mutacji
 
   let population = [];
+  let results = "";
 
-  const cities = await getCities().then((data) => {
+  let filePath = process.argv[2] || "./dane/pr144.tsp";
+
+  const cities = await getCities(filePath).then((data) => {
     return convertTSPToArray(data);
   });
 
-  population = initPopulation(cities, populationAmount);
+  // population = initPopulation(cities, populationAmount);
 
-  population = population.map((DNA) => {
-    return shuffle([...DNA]);
-  });
+  // population = population.map((DNA) => {
+  //   return shuffle([...DNA]);
+  // });
 
-  bestDNA = population[0];
+  for (let i = 0; i < executionNumb; i++) {
+    const scriptStart = Date.now();
 
-  while (execution) {
-    population = mutation(population, mutationProbability);
-    population = crossOver(population, populationAmount, crossProbability);
-    population = selection(population);
+    population = [];
+    population = initPopulation(cities, populationAmount);
 
-    console.log("best from DNA:", getWholeDistance(population[0]));
-    if (Date.now() - scriptStart > 240000) {
-      execution = false;
+    population = population.map((DNA) => {
+      return shuffle([...DNA]);
+    });
+
+    bestDNA = population[0];
+
+    while (execution) {
+      population = mutation(population, mutationProbability);
+      population = crossOver(population, populationAmount, crossProbability);
+      population = selection(population);
+
+      // console.log("best from DNA:", getWholeDistance(population[0]));
+      if (Date.now() - scriptStart > oneExecutionTime) {
+        debugger;
+        execution = false;
+
+        let route = population[0].map((point) => point.index).join(" ");
+
+        results += `${route} ${getWholeDistance(population[0])} \n`;
+      }
     }
+
+    execution = true;
+    fs.writeFileSync("results.txt", results);
   }
-
-  // for (let i = 0; i < executionNumb; i++) {
-  //   population = crossOver(population, populationAmount, crossProbability);
-  //   population = mutation(population, mutationProbability);
-  //   population = selection(population);
-
-  //   console.log("best from DNA:", getWholeDistance(bestDNA));
-  // }
 };
 
 init();
