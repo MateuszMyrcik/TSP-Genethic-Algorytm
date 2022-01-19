@@ -28,6 +28,7 @@ const getWholeDistance = (DNA) => {
   let distance = 0;
   DNA.forEach((gen, index) => {
     if (DNA.length - 1 === index) {
+      distance += getDistance(gen, DNA[0]);
       return;
     }
 
@@ -246,7 +247,7 @@ const crossOverFun = (orderA, orderB) => {
 };
 
 const mutateDNA = (DNA) => {
-  const numberOfGenes = 5;
+  const numberOfGenes = 30;
   const randomIndex = getRandomInt(0, DNA.length - numberOfGenes);
 
   const mutatedDNA = arrayReverse([...DNA], randomIndex, numberOfGenes);
@@ -272,17 +273,7 @@ const selection = (population) => {
   const distances = [];
 
   [...population].forEach((DNA, index) => {
-    let distance = 0;
-
-    DNA.forEach((gen, index) => {
-      if (DNA.length - 1 === index) {
-        return;
-      }
-
-      distance += getDistance(gen, DNA[index + 1]);
-    });
-
-    distances.push({ distance, index: index });
+    distances.push({ distance: getWholeDistance(DNA), index: index });
   });
 
   distances
@@ -298,7 +289,7 @@ const selection = (population) => {
     })
     .reverse();
 
-  //   console.log(
+  // console.log(
   //   "best from population:",
   //   distances[population.length - 1].distance
   // );
@@ -338,9 +329,9 @@ const selection = (population) => {
 const init = async () => {
   let execution = true;
 
-  let executionNumb = 3; //	liczba	uruchomień	programu
+  let executionNumb = 4; //	liczba	uruchomień	programu
   let oneExecutionTime = 600000; // in ms
-  let populationAmount = 50; // liczba	populacji
+  let populationAmount = 20; // liczba	populacji
   let crossProbability = 0.8; // prawdopodobieństwo	krzyżowania
   let mutationProbability = 0.15; // prawdopodobieństwo	mutacji
 
@@ -376,12 +367,14 @@ const init = async () => {
       population = crossOver(population, populationAmount, crossProbability);
       population = selection(population);
 
-      // console.log("best from DNA:", getWholeDistance(population[0]));
+      console.log("best from DNA:", getWholeDistance(population[0]));
       if (Date.now() - scriptStart > oneExecutionTime) {
         debugger;
         execution = false;
 
-        let route = population[0].map((point) => point.index).join(" ");
+        let route = population[0]
+          .map((point) => Number(point.index) + 1)
+          .join(" ");
 
         results += `${route} ${getWholeDistance(population[0])} \n`;
       }
