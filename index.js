@@ -367,7 +367,7 @@ const init = async () => {
       population = crossOver(population, populationAmount, crossProbability);
       population = selection(population);
 
-      console.log("best from DNA:", getWholeDistance(population[0]));
+      // console.log("best from DNA:", getWholeDistance(population[0]));
       if (Date.now() - scriptStart > oneExecutionTime) {
         debugger;
         execution = false;
